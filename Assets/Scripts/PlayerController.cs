@@ -18,10 +18,14 @@ public class PlayerController : MonoBehaviour {
     //Animation
     private Animator myAnim;
 
+    public Vector3 respawnPosition;
+
 	// Use this for initialization
 	void Start () {
         myRigidbody = GetComponent<Rigidbody2D>();
         myAnim = GetComponent<Animator>();
+        //sets initial respawn point
+        respawnPosition = transform.position;
 	}
 	
 	// Update is called once per frame
@@ -64,7 +68,13 @@ public class PlayerController : MonoBehaviour {
     {
         if(other.tag == "Kill Plane")
         {
-            gameObject.SetActive(false);
+            //gameObject.SetActive(false);
+            transform.position = respawnPosition;
+        }
+
+        if(other.tag == "Checkpoint")
+        {
+            respawnPosition = other.transform.position;
         }
     }
 
