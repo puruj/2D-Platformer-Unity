@@ -13,12 +13,17 @@ public class PlayerController : MonoBehaviour {
     public LayerMask whatIsGround;
     public bool isGrounded;
 
+    //Time change
+    public bool timeChange; 
+
     private Rigidbody2D myRigidbody;
 
     //Animation
     private Animator myAnim;
-
     public Vector3 respawnPosition;
+
+    //reference to Level Manager
+    public LevelManager theLevelManager;
 
 	// Use this for initialization
 	void Start () {
@@ -26,6 +31,8 @@ public class PlayerController : MonoBehaviour {
         myAnim = GetComponent<Animator>();
         //sets initial respawn point
         respawnPosition = transform.position;
+        //initializing level manager
+        theLevelManager = FindObjectOfType<LevelManager>();
 	}
 	
 	// Update is called once per frame
@@ -55,8 +62,17 @@ public class PlayerController : MonoBehaviour {
         //jumping 
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
+            //GetComponent<AudioSource>().pla
             myRigidbody.velocity = new Vector3(myRigidbody.velocity.x, jumpSpeed, 0f); 
         }
+
+        if (Input.GetButtonDown("Fire2"))
+        {
+            timeChange = true;
+        }
+
+      
+
 
         //animation setup
         myAnim.SetFloat("Speed", Mathf.Abs(myRigidbody.velocity.x));
@@ -69,7 +85,8 @@ public class PlayerController : MonoBehaviour {
         if(other.tag == "Kill Plane")
         {
             //gameObject.SetActive(false);
-            transform.position = respawnPosition;
+            //transform.position = respawnPosition;
+            theLevelManager.Respawn();
         }
 
         if(other.tag == "Checkpoint")
@@ -77,6 +94,20 @@ public class PlayerController : MonoBehaviour {
             respawnPosition = other.transform.position;
         }
     }
+    //used colision of objects
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.tag == "Moving Platform")
+        {
+            transform.parent = collision.transform;
+        }
+    }
 
-
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Moving Platform")
+        {
+            transform.parent = null;
+        }
+    }
 }
