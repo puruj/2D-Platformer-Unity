@@ -6,6 +6,8 @@ public class HurtPlayer : MonoBehaviour {
 
     private LevelManager theLevelManager;
 
+    public int dmgToGive;
+
 	// Use this for initialization
 	void Start () {
         theLevelManager = FindObjectOfType<LevelManager>();
@@ -20,7 +22,9 @@ public class HurtPlayer : MonoBehaviour {
     {
         if (collision.tag == "Player" )
         {
-            theLevelManager.Respawn();
+            //theLevelManager.Respawn();
+
+            theLevelManager.HurtPlayer(dmgToGive);
         }
     }
 }

@@ -18,16 +18,38 @@ public class LevelManager : MonoBehaviour {
     //reference to text box
     public Text coinText;
 
-	// Use this for initialization
-	void Start () {
+    //reference to heart images
+    public Image heart1;
+    public Image heart2;
+    public Image heart3;
+
+    //sprites of differnt heart types
+    public Sprite heartFull;
+    public Sprite heartHalf;
+    public Sprite heartEmpty;
+    
+    //health stats
+    public int maxHealth;
+    public int healthCount;
+
+    private bool respawning;
+
+    // Use this for initialization
+    void Start () {
         thePlayer = FindObjectOfType<PlayerController>();
         //instantiate coins UI
         coinText.text = "Coins: " + coinCount;
+        //instantiate health
+        healthCount = maxHealth;
     }
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if(healthCount <= 0 && !respawning)
+        {
+            Respawn();
+            respawning = true;
+        }
 	}
 
     public void Respawn()
@@ -38,12 +60,20 @@ public class LevelManager : MonoBehaviour {
     // will make respawn timer it is co-routine
     public IEnumerator RespawnCo()
     {
+        //take away player control from user
         thePlayer.gameObject.SetActive(false);
 
         Instantiate(deathExplosion, thePlayer.transform.position, thePlayer.transform.rotation);
         //delay for respawn
         yield return new WaitForSeconds(waitToRespawn);
+
+        healthCount = maxHealth;
+        respawning = false;
+        updateHeartMeter();
+
+        //respawn player
         thePlayer.transform.position = thePlayer.respawnPosition;
+        //give player control to user
         thePlayer.gameObject.SetActive(true);
     }
 
@@ -52,5 +82,62 @@ public class LevelManager : MonoBehaviour {
         coinCount += coinsToAdd;
         //updates coin count to UI
         coinText.text = "Coins: " + coinCount;
+    }
+
+    //does damage to player
+    public void HurtPlayer(int dmg)
+    {
+        healthCount -= dmg;
+        updateHeartMeter();
+    }
+
+    public void updateHeartMeter()
+    {
+        switch (healthCount)
+        {
+            case 6:
+                heart1.sprite = heartFull;
+                heart2.sprite = heartFull;
+                heart3.sprite = heartFull;
+                return;
+            case 5:
+                heart1.sprite = heartFull;
+                heart2.sprite = heartFull;
+                heart3.sprite = heartHalf;
+                return;
+            case 4:
+                heart1.sprite = heartFull;
+                heart2.sprite = heartFull;
+                heart3.sprite = heartEmpty;
+                return;
+            case 3:
+                heart1.sprite = heartFull;
+                heart2.sprite = heartHalf;
+                heart3.sprite = heartEmpty;
+                return;
+            case 2:
+                heart1.sprite = heartFull;
+                heart2.sprite = heartEmpty;
+                heart3.sprite = heartEmpty;
+                return;
+            case 1:
+                heart1.sprite = heartHalf;
+                heart2.sprite = heartEmpty;
+                heart3.sprite = heartEmpty;
+                return;
+             case 0:
+                heart1.sprite = heartEmpty;
+                heart2.sprite = heartEmpty;
+                heart3.sprite = heartEmpty;
+                return;
+
+            default:
+                heart1.sprite = heartEmpty;
+                heart2.sprite = heartEmpty;
+                heart3.sprite = heartEmpty;
+                return;
+        }
+
+
     }
 }
