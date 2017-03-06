@@ -25,6 +25,9 @@ public class PlayerController : MonoBehaviour {
     //reference to Level Manager
     public LevelManager theLevelManager;
 
+    //reference to box that kills enemies
+    public GameObject stompBox;
+
 	// Use this for initialization
 	void Start () {
         myRigidbody = GetComponent<Rigidbody2D>();
@@ -77,6 +80,15 @@ public class PlayerController : MonoBehaviour {
         //animation setup
         myAnim.SetFloat("Speed", Mathf.Abs(myRigidbody.velocity.x));
         myAnim.SetBool("Grounded", isGrounded);
+
+        if (myRigidbody.velocity.y < 0)
+        {
+            stompBox.SetActive(true);
+        }
+        else
+        {
+            stompBox.SetActive(false);
+        }
     }
 
     //for kill plane

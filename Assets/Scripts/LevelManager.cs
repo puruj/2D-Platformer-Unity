@@ -34,6 +34,7 @@ public class LevelManager : MonoBehaviour {
 
     private bool respawning;
 
+    public ResetOnResspawn[] objectsToReset;
     // Use this for initialization
     void Start () {
         thePlayer = FindObjectOfType<PlayerController>();
@@ -41,6 +42,8 @@ public class LevelManager : MonoBehaviour {
         coinText.text = "Coins: " + coinCount;
         //instantiate health
         healthCount = maxHealth;
+
+        objectsToReset = FindObjectsOfType<ResetOnResspawn>();
     }
 	
 	// Update is called once per frame
@@ -70,11 +73,21 @@ public class LevelManager : MonoBehaviour {
         healthCount = maxHealth;
         respawning = false;
         updateHeartMeter();
+        //sets coins to zero after death
+        coinCount = 0;
+        coinText.text = "Coins: " + coinCount;
+
 
         //respawn player
         thePlayer.transform.position = thePlayer.respawnPosition;
         //give player control to user
         thePlayer.gameObject.SetActive(true);
+
+        for(int i = 0; i < objectsToReset.Length; i++)
+        {
+            objectsToReset[i].gameObject.SetActive(true);
+            objectsToReset[i].ResetObject();
+        }
     }
 
     public void AddCoins(int coinsToAdd)
