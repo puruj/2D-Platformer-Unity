@@ -5,7 +5,10 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour {
 
     public float moveSpeed;
+    private float activeMoveSpeed;
     public float jumpSpeed;
+
+    public bool canMove;
 
     //ground check
     public Transform groundCheck;
@@ -16,7 +19,7 @@ public class PlayerController : MonoBehaviour {
     //Time change
     public bool timeChange; 
 
-    private Rigidbody2D myRigidbody;
+    public Rigidbody2D myRigidbody;
 
     //Animation
     private Animator myAnim;
@@ -28,6 +31,19 @@ public class PlayerController : MonoBehaviour {
     //reference to box that kills enemies
     public GameObject stompBox;
 
+    //pushing back player
+    public float knockBackForce;
+    public float knockBackLength;
+    private float knockBackCounter;
+    public float invincibiltyLength;
+    private float invincibiltyCounter;
+    //sounds
+    public AudioSource jumpSound;
+    public AudioSource hurtSound;
+
+    private bool onPlatform;
+    public float onPlatformSpeedModifier;
+
 	// Use this for initialization
 	void Start () {
         myRigidbody = GetComponent<Rigidbody2D>();
@@ -36,6 +52,9 @@ public class PlayerController : MonoBehaviour {
         respawnPosition = transform.position;
         //initializing level manager
         theLevelManager = FindObjectOfType<LevelManager>();
+
+        activeMoveSpeed = moveSpeed;
+        canMove = true;
 	}
 	
 	// Update is called once per frame
@@ -43,39 +62,72 @@ public class PlayerController : MonoBehaviour {
 
         isGrounded = Physics2D.OverlapCircle(groundCheck.position,groundCheckRadius,whatIsGround);
 
-        //moving left and right
-        //going right
-        if (Input.GetAxisRaw("Horizontal") > 0f)
+        if (knockBackCounter <= 0  && canMove ==true)
         {
-            myRigidbody.velocity = new Vector3(moveSpeed,myRigidbody.velocity.y,0f);
-            transform.localScale= new Vector3(1f,1f,1f);
-        }
-        //going left
-        else if (Input.GetAxisRaw("Horizontal") < 0f)
-        {
-            myRigidbody.velocity = new Vector3(-moveSpeed, myRigidbody.velocity.y, 0f);
-            //flips sprite to look left
-            transform.localScale = new Vector3(-1f, 1f, 1f);
-        }
-        else
-        {
-            myRigidbody.velocity = new Vector3(0f, myRigidbody.velocity.y, 0f);
-        }
 
-        //jumping 
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            //GetComponent<AudioSource>().pla
-            myRigidbody.velocity = new Vector3(myRigidbody.velocity.x, jumpSpeed, 0f); 
-        }
+            if (onPlatform)
+            {
+                activeMoveSpeed = moveSpeed * onPlatformSpeedModifier;
+            }
+            else
+            {
+                activeMoveSpeed = moveSpeed;
+            }
 
-        if (Input.GetButtonDown("Fire2"))
-        {
-            timeChange = true;
-        }
 
+            //moving left and right
+            //going right
+            if (Input.GetAxisRaw("Horizontal") > 0f)
+            {
+                myRigidbody.velocity = new Vector3(activeMoveSpeed, myRigidbody.velocity.y, 0f);
+                transform.localScale = new Vector3(1f, 1f, 1f);
+            }
+            //going left
+            else if (Input.GetAxisRaw("Horizontal") < 0f)
+            {
+                myRigidbody.velocity = new Vector3(-activeMoveSpeed, myRigidbody.velocity.y, 0f);
+                //flips sprite to look left
+                transform.localScale = new Vector3(-1f, 1f, 1f);
+            }
+            else
+            {
+                myRigidbody.velocity = new Vector3(0f, myRigidbody.velocity.y, 0f);
+            }
+
+            //jumping 
+            if (Input.GetButtonDown("Jump") && isGrounded)
+            {
+                //GetComponent<AudioSource>().pla
+                myRigidbody.velocity = new Vector3(myRigidbody.velocity.x, jumpSpeed, 0f);
+                jumpSound.Play();
+            }
+
+            
+        }
       
+        if(knockBackCounter > 0)
+        {
+            knockBackCounter -= Time.deltaTime;
+            //going left to right
+            if (transform.localScale.x > 0)
+            {
+                myRigidbody.velocity = new Vector3(-knockBackForce, knockBackForce, 0f);
+            }
+            //going right to left
+            else {
+                myRigidbody.velocity = new Vector3(knockBackForce, knockBackForce, 0f);
+            }
+        }
+        //time of invincibilty
+        if (invincibiltyCounter > 0)
+        {
+            invincibiltyCounter -= Time.deltaTime;
+        }
 
+        if (invincibiltyCounter <= 0)
+        {
+            theLevelManager.invincible = false;
+        }
 
         //animation setup
         myAnim.SetFloat("Speed", Mathf.Abs(myRigidbody.velocity.x));
@@ -89,6 +141,13 @@ public class PlayerController : MonoBehaviour {
         {
             stompBox.SetActive(false);
         }
+    }
+
+    public void knockBack()
+    {
+        knockBackCounter = knockBackLength;
+        invincibiltyCounter = invincibiltyLength;
+        theLevelManager.invincible = true;
     }
 
     //for kill plane
@@ -112,6 +171,7 @@ public class PlayerController : MonoBehaviour {
         if(collision.gameObject.tag == "Moving Platform")
         {
             transform.parent = collision.transform;
+            onPlatform = true;
         }
     }
 
@@ -120,6 +180,7 @@ public class PlayerController : MonoBehaviour {
         if (collision.gameObject.tag == "Moving Platform")
         {
             transform.parent = null;
+            onPlatform = false;
         }
     }
 }

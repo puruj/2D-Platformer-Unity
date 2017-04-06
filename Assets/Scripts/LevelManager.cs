@@ -14,6 +14,9 @@ public class LevelManager : MonoBehaviour {
 
     //keeps count of all coins in game
     public int coinCount;
+    private int internalCoinCount;
+    public int amtNeededForLife;
+    public AudioSource coinPickUp;
 
     //reference to text box
     public Text coinText;
@@ -35,6 +38,26 @@ public class LevelManager : MonoBehaviour {
     private bool respawning;
 
     public ResetOnResspawn[] objectsToReset;
+
+    //making player invincible on knockback
+    public bool invincible;
+
+    //lives
+    public Text liveText;
+    public int startingLives;
+    public int currentLives;
+
+    //game over screen
+    public GameObject gameOverScreen;
+
+    //game music
+    public AudioSource levelMusic;
+    public AudioSource levelMusic2;
+    public AudioSource gameOverMusic;
+    public AudioSource endLevelMusic;
+
+    public bool respawnCoActive;
+
     // Use this for initialization
     void Start () {
         thePlayer = FindObjectOfType<PlayerController>();
@@ -44,6 +67,16 @@ public class LevelManager : MonoBehaviour {
         healthCount = maxHealth;
 
         objectsToReset = FindObjectsOfType<ResetOnResspawn>();
+        if (PlayerPrefs.HasKey("coinCount"))
+        {
+            coinCount = PlayerPrefs.GetInt("coinCount");
+        }
+        
+        //instantiate coins UI
+        coinText.text = "Coins: " + coinCount;
+
+        currentLives = startingLives;
+        liveText.text = "Lives x " + currentLives;
     }
 	
 	// Update is called once per frame
@@ -53,16 +86,41 @@ public class LevelManager : MonoBehaviour {
             Respawn();
             respawning = true;
         }
+
+        if(internalCoinCount >= amtNeededForLife)
+        {
+            currentLives += 1;
+            liveText.text = "Lives x " + currentLives;
+            internalCoinCount -= amtNeededForLife;
+        }
 	}
 
     public void Respawn()
     {
-        StartCoroutine("RespawnCo");
+        currentLives -= 1;
+        liveText.text = "Lives x " + currentLives;
+
+        if (currentLives > 0)
+        {
+            StartCoroutine("RespawnCo");
+        }
+
+        else
+        {
+            //take away player control from user
+            thePlayer.gameObject.SetActive(false);
+            gameOverScreen.SetActive(true);
+            levelMusic.Stop();
+            levelMusic2.Stop();
+            gameOverMusic.Play();
+        }
     }
 
     // will make respawn timer it is co-routine
     public IEnumerator RespawnCo()
     {
+        respawnCoActive = true;
+
         //take away player control from user
         thePlayer.gameObject.SetActive(false);
 
@@ -70,13 +128,16 @@ public class LevelManager : MonoBehaviour {
         //delay for respawn
         yield return new WaitForSeconds(waitToRespawn);
 
+        respawnCoActive = false;
+
         healthCount = maxHealth;
         respawning = false;
         updateHeartMeter();
         //sets coins to zero after death
         coinCount = 0;
+        internalCoinCount = 0;
         coinText.text = "Coins: " + coinCount;
-
+        
 
         //respawn player
         thePlayer.transform.position = thePlayer.respawnPosition;
@@ -93,14 +154,35 @@ public class LevelManager : MonoBehaviour {
     public void AddCoins(int coinsToAdd)
     {
         coinCount += coinsToAdd;
+        internalCoinCount += coinsToAdd;
         //updates coin count to UI
         coinText.text = "Coins: " + coinCount;
+        coinPickUp.Play();
     }
 
     //does damage to player
     public void HurtPlayer(int dmg)
     {
-        healthCount -= dmg;
+        if (!invincible)
+        {
+            healthCount -= dmg;
+            updateHeartMeter();
+            //call to knockback function
+            thePlayer.knockBack();
+            //hurt sound
+            thePlayer.hurtSound.Play();
+        }
+    }
+
+    public void GiveHealth(int healthToGive)
+    {
+        healthCount += healthToGive;
+        if(healthCount > maxHealth)
+        {
+            healthCount = maxHealth;
+        }
+        coinPickUp.Play();
+
         updateHeartMeter();
     }
 
@@ -152,5 +234,12 @@ public class LevelManager : MonoBehaviour {
         }
 
 
+    }
+
+    public void AddLives(int livesToAdd)
+    {
+        coinPickUp.Play();
+        currentLives += livesToAdd;
+        liveText.text = "Lives x " + currentLives;
     }
 }

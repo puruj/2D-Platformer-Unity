@@ -8,13 +8,16 @@ public class TimeControl : MonoBehaviour {
     GameObject[] past, present;
     bool triggered = false;
 
-    public AudioClip[] audios;
+    //public AudioClip[] audios;
 
-   // public GameObject bg;
-    //public Material pa, pr;
+    //reference to Level Manager
+    public LevelManager theLevelManager;
 
-	// Use this for initialization
-	void Start () {
+
+    // Use this for initialization
+    void Start () {
+        //initializing level manager
+        theLevelManager = FindObjectOfType<LevelManager>();
         past = GameObject.FindGameObjectsWithTag("Past");
         present = GameObject.FindGameObjectsWithTag("Present");
         for (int i = 0; i < present.Length; i++)
@@ -25,14 +28,19 @@ public class TimeControl : MonoBehaviour {
 	void Update () {
 
         if (Input.GetKeyDown(KeyCode.T))
+        {
+           // 
             triggered = true;
+            
+        }
 
         if (triggered)
         {
             if (currentTime)
             {
-                //bg.GetComponent<Renderer>().material = pr;
-                for(int i = 0; i < past.Length; i++)
+                //theLevelManager.levelMusic.Pause();
+                //theLevelManager.levelMusic2.volume = 0.5f;
+                for (int i = 0; i < past.Length; i++)
                 {
                     past[i].SetActive(true);
                 }
@@ -42,6 +50,8 @@ public class TimeControl : MonoBehaviour {
                 }
             }else
             {
+                //theLevelManager.levelMusic.UnPause();
+               //theLevelManager.levelMusic2.volume = 0f;
                 //bg.GetComponent<Renderer>().material = pa;
                 for (int i = 0; i < past.Length; i++)
                 {
@@ -53,6 +63,7 @@ public class TimeControl : MonoBehaviour {
                 }
             }
             triggered = false;
+            
             currentTime = !currentTime;
         }
 	}
